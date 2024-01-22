@@ -39,6 +39,12 @@ To connect to the control panel, websocket cli client is needed (e.g.
 [wscat](https://www.npmjs.com/package/wscat))
 ```
 $ wscat -c localhost:4444
+```
+or
+```
+uwsc http://localhost:2222
+```
+```
 Connected (press CTRL+C to quit)
 > Enter:
 * "0" - to print bot clients collection

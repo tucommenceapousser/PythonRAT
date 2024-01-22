@@ -72,7 +72,10 @@ $ python3.7 src/client.py
 $ wscat -c localhost:4444
 ...
 ```
-
+or
+```
+uwsc http://localhost:2222
+```
 ### Configuration
 
 #### Control panel server
